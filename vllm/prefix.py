@@ -46,7 +46,9 @@ class Prefix:
 
 
 class PrefixPool:
-    """Manages all the prompt prefixes.
+    """Manages all the prompt prefixes. It is bounded by max_capacity.
+    When full, it removes the prefixes that were first inserted (the oldest)
+    ones.
 
     Args:
         block_size: The block size of the executed model.

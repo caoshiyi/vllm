@@ -32,7 +32,7 @@ class Prefix:
     def get_num_blocks(self) -> int:
         return self.length // self.block_size
 
-    def get_block_numbers(self) -> List[int]:
+    def get_block_numbers(self) -> list[int]:
         return [block.block_number for block in self.block_table]
 
     def get_length(self) -> int:
@@ -54,11 +54,12 @@ class PrefixPool:
     Attributes:
         prefixes: A list of all the prefixes.
         block_size: The block size of the executed model.
+        max_capacity: Max number of prefixes to keep in the pool at any given time.
     """
-
     def __init__(
         self,
         block_size: int,
+        max_capacity: int = 32
     ) -> None:
         self.prefixes: Dict[int, Prefix] = {}
         self.block_size = block_size

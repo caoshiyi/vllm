@@ -72,6 +72,8 @@ class PrefixPool:
         # Dictionary from hash of prefix token ids to prefix
         self.prefixes: Dict[int, Prefix] = OrderedDict()
         self.block_size = block_size
+        if max_capacity is not None:
+            assert max_capacity > 0, f"PrefixPool.max_capacity must be greater than 0, but received max_capacity={max_capacity}"
         self.max_capacity = max_capacity
 
     def _truncate_token_ids(self, token_ids: Sequence[int]) -> Tuple[int]:

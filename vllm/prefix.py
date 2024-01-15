@@ -1,4 +1,5 @@
 from typing import Dict, List, Sequence, Tuple, Optional
+from collections import OrderedDict
 
 from vllm.block import BlockTable
 
@@ -38,9 +39,14 @@ class Prefix:
     def get_length(self) -> int:
         return self.length
 
-    def get_hash(self) -> int:
+    def __hash__(self) -> int:
         return self.hash
-
+    
+    def __eq__(self, other) -> bool:
+        if isinstance(other, Prefix):
+            return self.hash == other.hash
+        return NotImplemented
+    
     def set_block_table(self, block_table: BlockTable) -> None:
         self.block_table = block_table.copy()
 
@@ -54,14 +60,21 @@ class PrefixPool:
     Attributes:
         prefixes: A list of all the prefixes.
         block_size: The block size of the executed model.
+        max_capacity: The maximum number of prefixes to store. By default it stores all the prefixes,
+            so adding this parameter does not modify the behavior of the previous version of the class.
     """
 
     def __init__(
         self,
         block_size: int,
+        max_capacity: Optional[int] = None
     ) -> None:
-        self.prefixes: Dict[int, Prefix] = {}
+        # Dictionary from hash of prefix token ids to prefix
+        self.prefixes: Dict[int, Prefix] = OrderedDict()
         self.block_size = block_size
+        if max_capacity is not None:
+            assert max_capacity > 0, f"PrefixPool.max_capacity must be greater than 0, but received max_capacity={max_capacity}"
+        self.max_capacity = max_capacity
 
     def _truncate_token_ids(self, token_ids: Sequence[int]) -> Tuple[int]:
         new_length = len(token_ids) // self.block_size * self.block_size
@@ -73,7 +86,10 @@ class PrefixPool:
             # Prefix is empty.
             return None
         prefix = Prefix(token_ids, self.block_size)
-        prefix_hash = prefix.get_hash()
-        if prefix_hash not in self.prefixes_hash:
+        prefix_hash = hash(prefix)
+        if prefix_hash not in self.prefixes:
+            if self.max_capacity is not None and len(self.prefixes) >= self.max_capacity:
+                # Remove the oldest prefix.
+                self.prefixes.popitem(last=False)
             self.prefixes[prefix_hash] = prefix
         return self.prefixes[prefix_hash]

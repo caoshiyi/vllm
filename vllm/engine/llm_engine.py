@@ -330,35 +330,6 @@ class LLMEngine:
                      log_stats=not engine_args.disable_log_stats)
         return engine
 
-    def add_request_with_prefix(
-        self,
-        request_id,
-        prompt_prefix: str,
-        prompt_suffix: str,
-        sampling_params: SamplingParams,
-        arrival_time: Optional[float] = None,
-    ) -> None:
-        """
-        Adds a request to the engine request pool that includes a prefix
-        prompt in addition to the prompt.  This function tokenizes
-        both the prompt_prefix and the prompt_suffix 
-        (where prompt = prompt_prefix + prompt_suffix) in order to 
-        find what is the prefix_pos.
-
-        It then calls the self.add_request function with the proper params.
-        """
-        prompt_prefix_token_ids = self.tokenizer.encode(prompt_prefix)
-        prompt_suffix_token_ids = self.tokenizer.encode(prompt_suffix)
-        prompt_token_ids = prompt_prefix_token_ids + prompt_suffix_token_ids
-        return self.add_request(
-            request_id=request_id, 
-            prompt=None, 
-            sampling_params=sampling_params,
-            prompt_token_ids = prompt_token_ids,
-            arrival_time=arrival_time,
-            prefix_pos=len(prompt_prefix_token_ids)
-        )
-
     def add_request(
         self,
         request_id: str,
